@@ -1,0 +1,88 @@
+criar tabela marcas(
+mrc_id int chave primária de incremento automático,
+mrc_nome varchar(50) not null,
+mrc_nacionalidade varchar(50)
+);
+INSERT INTO marcas (mrc_nome, mrc_nacionalidade) VALORES
+('faber castel', 'Brasil'),
+('tilibra', 'Brasil'),
+('pentel', 'Brasil');
+
+CREATE TABLE produtos(
+prd_id int auto_increment PRIMARY KEY,
+prd_nome varchar(50) not NULL,
+prd_qtd_estoque int NOT NULL DEFAULT 0,
+prd_estoque_mim int not null DEFAULT 0,
+prd_data_fabricacao timestamp DEFAULT now,
+prd_perecivel boolean,
+prd_valor decimal(10,2),
+
+prd_marca_id int,
+CONSTRAINT fk_marcas FOREIGN key (prd_marca_id) REFERENCES marcas (mrc_id)
+);
+INSERT INTO produtos (prd_nome, prd_qtd_estoque, prd_estoque_mim, prd_data_fabricacao, prd_perecivel, prd_valor, prd_marca_id, prd_data_validade) VALORES
+('lapiseira', 100, 20, '2024-01-15', 0, 8.50, 1, '2024-06-0, 1 '),
+('lápis', 50, 10, '2024-02-20', 1, 2.50, 2, '2024-07-01'),
+('borracha', 200, 30, '2024-03-10 ', 0, 5,75, 3, '15/06/2024');
+
+CREATE TABLE fornecedores(
+frn_id int auto_increment PRIMARY KEY,
+frn_nome varchar(50) not NULL,
+frn_email varchar(50)
+);
+
+INSERT INTO fornecedores (frn_nome, frn_email) VALORES
+('Fornecedor 1', ' fornecedor1@gmail.com '),
+('Fornecedor 2', ' fornecedor2@outlook.com '),
+('Fornecedor 3', ' fornecedor3@hotmail. com ');
+
+CREATE TABLE produto_fornecedor(
+pf_prod_id int REFERÊNCIAS produtos (prd_id),
+pf_forn_id int REFERÊNCIAS fornecedores (frn_id),
+
+    PRIMARY KEY (pf_prod_id, pf_forn_id)
+    );
+CRIAR VISUALIZAR produtos_e_marcas AS
+SELECT p.prd_id, p.prd_nome, m.mrc_nome AS marca
+FROM produtos p
+JOIN marcas m ON p.prd_marca_id = m.mrc_id;
+
+CRIAR VISUALIZAR produtos_fornecedores AS
+SELECT p.prd_id, p.prd_nome, f.frn_nome AS fornecedor
+FROM produtos p
+JOIN produto_fornecedor pf ON p.prd_id = pf.pf_prod_id
+JOIN fornecedores f ON pf.pf_forn_id = f.frn_id;
+
+CRIAR VISUALIZAR produtos_fornecedores_marcas AS
+SELECT p.prd_id, p.prd_nome, m.mrc_nome AS marca, f.frn_nome AS fornecedor
+FROM produtos p
+JOIN produto_fornecedor pf ON p.prd_id = pf.pf_prod_id
+JOIN fornecedores f ON pf.pf_forn_id = f.frn_id
+JOIN marcas m ON p.prd_marca_id = m.mrc_id;
+
+CRIAR VISUALIZAR produtos_estoque_baixo AS
+SELECT *
+FROM produtos
+WHERE prd_qtd_estoque < prd_estoque_mim;
+
+ALTER TABLE produtos
+ADD prd_data_validade DATE;
+
+INSERT INTO produtos (prd_nome, prd_qtd_estoque, prd_estoque_mim, prd_data_fabricacao, prd_perecivel, prd_valor, prd_marca_id, prd_data_validade)
+VALORES
+('lapis', 50, 10, '2024-02-01', 1, 2.50, 1, '2024-06-01 '),
+('borracha', 30, 5, '2024-02-15', 0, 4.20, 2, '2024-07-01'),
+('caderno', 20, 8, '2024-03-20 ', 1, 23.00, 1, '15/06/2024');
+
+CRIAR VISUALIZAR produtos_validade_vencida AS
+SELECT p.*, m.mrc_nome AS marca
+FROM produtos p
+JOIN marcas m ON p.prd_marca_id = m.mrc_id
+WHERE prd_data_validade < CURDATE();
+
+CRIAR VISUALIZAR produtos_preco_acima_media AS
+SELECT *
+FROM produtos
+WHERE prd_valor > (SELECT AVG(prd_valor) FROM produtos);
+
+SELECIONE* EM produtos_preco_acima_media;
